@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jokefront
+  labels:
+    app: jokefront
+    tags.datadoghq.com/env: "prod"
+    tags.datadoghq.com/service: "jokefront"
+    tags.datadoghq.com/version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jokefront
+  template:
+    metadata:
+      annotations:
+        ad.datadoghq.com/bingo.logs: '[{"source":"go","service":"jokefront"}]'
+        ad.datadoghq.com/bingo.tags: '[{"env":"prod","service":"jokefront","version":"1.0.0"}]'
+      labels:
+        app: jokefront
+        tags.datadoghq.com/env: "prod"
+        tags.datadoghq.com/service: "jokefront"
+        tags.datadoghq.com/version: "1.0.0"
+    spec:
+      containers:
+      - name: jokefront
+        image: saphoooo/jokefront:latest
+        env:
+        - name: DD_AGENT_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: DD_ENV
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/env']
+        - name: DD_SERVICE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/service']
+        - name: DD_VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/version']
+        - name: DD_TRACE_SAMPLE_RATE
+          value: "1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jokefront
+  name: jokefront
+spec:
+  ports:
+  - port: 8000
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: jokefront
+  type: NodePort
