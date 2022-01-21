@@ -28,6 +28,11 @@ spec:
       - name: jokeback
         image: saphoooo/jokeback:latest
         env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis
+              key: redis-password
         - name: DD_AGENT_HOST
           valueFrom:
             fieldRef:
