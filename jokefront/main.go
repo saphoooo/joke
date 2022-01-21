@@ -41,7 +41,7 @@ func todaysjokeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Panic().Msg(err.Error())
 	}
-	span, ctx := tracer.StartSpanFromContext(r.Context(), "http.request")
+	span, ctx := tracer.StartSpanFromContext(r.Context(), "func.todaysjokeHandler")
 	defer span.Finish()
 	client := http.Client{Timeout: time.Duration(2 * time.Second)}
 	req = req.WithContext(ctx)
