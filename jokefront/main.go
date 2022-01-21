@@ -27,32 +27,59 @@ func main() {
 }
 
 func todaysjokeHandler(w http.ResponseWriter, r *http.Request) {
+	span, ctx := tracer.StartSpanFromContext(r.Context(), "func.todaysjokeHandler")
+	defer span.Finish()
+
 	msg := message{
 		Weekday: time.Now().Weekday().String(),
 	}
-	log.Trace().Msg("today is " + msg.Weekday)
+	log.Trace().Uint64("dd.trace_id", span.Context().TraceID()).
+		Uint64("dd.span_id", span.Context().SpanID()).
+		Str("dd.service", "jokefront").
+		Str("dd.env", "prod").
+		Str("dd.version", "1.0.0").
+		Msg("today is " + msg.Weekday)
 
 	content, err := json.Marshal(msg)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 	}
 
 	req, err := http.NewRequest("POST", "http://jokeback:7000/api/jokes", bytes.NewBuffer(content))
 	if err != nil {
-		log.Panic().Msg(err.Error())
+		log.Panic().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 	}
-	span, ctx := tracer.StartSpanFromContext(r.Context(), "func.todaysjokeHandler")
-	defer span.Finish()
+
 	client := http.Client{Timeout: time.Duration(2 * time.Second)}
 	req = req.WithContext(ctx)
 	err = tracer.Inject(span.Context(), tracer.HTTPHeadersCarrier(req.Header))
 	if err != nil {
-		log.Debug().Str("dd-tracer-go", "unable to inject trace id").Msg(err.Error())
+		log.Debug().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "oops something wrong hapenned...")
 		return
@@ -61,17 +88,32 @@ func todaysjokeHandler(w http.ResponseWriter, r *http.Request) {
 	log.Trace().Msg("backend answered with " + resp.Status)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "oops something wrong hapenned...")
 		return
 	}
-	log.Trace().Msg("body: " + string(body))
+	log.Trace().Uint64("dd.trace_id", span.Context().TraceID()).
+		Uint64("dd.span_id", span.Context().SpanID()).
+		Str("dd.service", "jokefront").
+		Str("dd.env", "prod").
+		Str("dd.version", "1.0.0").
+		Msg("body: " + string(body))
 
 	jokeOfTheDay := joke{}
 	err = json.Unmarshal(body, &jokeOfTheDay)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 	}
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, jokeOfTheDay.Joke)

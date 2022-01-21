@@ -40,7 +40,12 @@ func jokeHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "oops something wrong hapenned...")
 		return
@@ -50,7 +55,12 @@ func jokeHandler(w http.ResponseWriter, r *http.Request) {
 	msg := message{}
 	err = json.Unmarshal(body, &msg)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "oops something wrong hapenned...")
 		return
@@ -69,34 +79,74 @@ func jokeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if todaysJokeContent, ok := checkCache(msg.Weekday, pool, span.Context()); ok {
-		log.Trace().Str("todaysJokeContent", todaysJokeContent).Bool("ok", ok).Msg("entering checkCache loop")
-		log.Trace().Msg("message from cache ok")
+		log.Trace().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Str("todaysJokeContent", todaysJokeContent).
+			Bool("ok", ok).
+			Msg("entering checkCache loop")
+
+		log.Trace().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("message from cache ok")
+
 		todaysJoke := joke{Joke: todaysJokeContent}
 		req, err := json.Marshal(todaysJoke)
 		if err != nil {
-			log.Panic().Msg(err.Error())
+			log.Panic().Uint64("dd.trace_id", span.Context().TraceID()).
+				Uint64("dd.span_id", span.Context().SpanID()).
+				Str("dd.service", "jokefront").
+				Str("dd.env", "prod").
+				Str("dd.version", "1.0.0").
+				Msg(err.Error())
 		}
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, string(req))
 		return
 	}
 
-	log.Debug().Msg("unable to retrieve joke from cache, looking for database")
+	log.Debug().Uint64("dd.trace_id", span.Context().TraceID()).
+		Uint64("dd.span_id", span.Context().SpanID()).
+		Str("dd.service", "jokefront").
+		Str("dd.env", "prod").
+		Str("dd.version", "1.0.0").
+		Msg("unable to retrieve joke from cache, looking for database")
 
 	todaysJokeContent, err = queryJoke(msg.Weekday, span.Context())
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 	}
 
 	todaysJoke := joke{Joke: todaysJokeContent}
 	req, err := json.Marshal(todaysJoke)
 	if err != nil {
-		log.Panic().Msg(err.Error())
+		log.Panic().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg(err.Error())
 	}
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, string(req))
 
-	log.Trace().Msg("setting up the cache")
+	log.Trace().Uint64("dd.trace_id", span.Context().TraceID()).
+		Uint64("dd.span_id", span.Context().SpanID()).
+		Str("dd.service", "jokefront").
+		Str("dd.env", "prod").
+		Str("dd.version", "1.0.0").
+		Msg("setting up the cache")
+
 	updateCache(msg.Weekday, todaysJokeContent, pool, span.Context())
 }
 
@@ -107,28 +157,54 @@ func checkCache(day string, pool *redis.Pool, spanctx ddtrace.SpanContext) (stri
 	span, ctx := tracer.StartSpanFromContext(context.Background(), "checkCache", tracer.ChildOf(spanctx))
 	defer span.Finish()
 
-	log.Trace().Msg("connecting to Redis...")
+	log.Trace().Uint64("dd.trace_id", span.Context().TraceID()).
+		Uint64("dd.span_id", span.Context().SpanID()).
+		Str("dd.service", "jokefront").
+		Str("dd.env", "prod").
+		Str("dd.version", "1.0.0").
+		Msg("connecting to Redis...")
+
 	_, err := conn.Do("AUTH", os.Getenv("REDIS_PASSWORD"), ctx)
 	if err != nil {
-		log.Error().Msg("error during authentication")
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("error during authentication")
 		return "", false
 	}
 
 	log.Trace().Msg("checking if key exists...")
 	exists, err := redis.Int(conn.Do("EXISTS", day, ctx))
 	if err != nil {
-		log.Error().Msg("error getting the key")
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("error getting the key")
 		return "", false
 	}
 	log.Trace().Int("exists", exists).Msg("current value of exists")
 	if exists == 0 { // the key does not exist
-		log.Debug().Msg("the key isn't set")
+		log.Debug().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("the key isn't set")
 		return "", false
 	}
 	log.Trace().Msg("getting the value...")
 	joke, err := redis.String(conn.Do("GET", day, ctx))
 	if err != nil {
-		log.Error().Msg("error getting the value from cache")
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("error getting the value from cache")
 		return "", false
 	}
 	return joke, true
@@ -144,19 +220,39 @@ func updateCache(day, joke string, pool *redis.Pool, spanctx ddtrace.SpanContext
 	log.Trace().Msg("connecting to Redis...")
 	_, err := conn.Do("AUTH", os.Getenv("REDIS_PASSWORD"), ctx)
 	if err != nil {
-		log.Error().Msg("error during authentication")
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("error during authentication")
 	}
 
 	log.Trace().Msg("setting up the key...")
 	_, err = conn.Do("SET", day, joke, ctx)
 	if err != nil {
-		log.Error().Msg("error setting key")
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("error setting key")
 	}
 	// set expiry of 30 seconds
-	log.Trace().Msg("setting up the expiry...")
+	log.Trace().Uint64("dd.trace_id", span.Context().TraceID()).
+		Uint64("dd.span_id", span.Context().SpanID()).
+		Str("dd.service", "jokefront").
+		Str("dd.env", "prod").
+		Str("dd.version", "1.0.0").
+		Msg("setting up the expiry...")
 	_, err = conn.Do("EXPIRE", day, 30, ctx)
 	if err != nil {
-		log.Error().Msg("error setting expiry")
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("error setting expiry")
 	}
 }
 
@@ -168,15 +264,27 @@ func queryJoke(day string, spanctx ddtrace.SpanContext) (joke string, err error)
 	sqltrace.Register("postgres", &pq.Driver{}, sqltrace.WithServiceName("postgresql"))
 	db, err := gormtrace.Open("postgres", psqlInfo, gormtrace.WithServiceName("postgresql"))
 	db = gormtrace.WithContext(ctx, db)
-	// db, err := gormtrace.Open("postgres", "postgres://postgres:datadog101@postgresql.default.svc/datadog?sslmode=disable")
 	if err != nil {
-		log.Error().Msg("unable to connect to database")
+		log.Error().Uint64("dd.trace_id", span.Context().TraceID()).
+			Uint64("dd.span_id", span.Context().SpanID()).
+			Str("dd.service", "jokefront").
+			Str("dd.env", "prod").
+			Str("dd.version", "1.0.0").
+			Msg("unable to connect to database")
 	}
 	defer db.Close()
 
 	var jokes Jokes
 	db.Where("DAY = ?", day).First(&jokes)
-	log.Trace().Uint("ID", jokes.ID).Str("DAY", jokes.DAY).Str("JOKE", jokes.JOKE).Msg("unable to connect to database")
+	log.Trace().Uint64("dd.trace_id", span.Context().TraceID()).
+		Uint64("dd.span_id", span.Context().SpanID()).
+		Str("dd.service", "jokefront").
+		Str("dd.env", "prod").
+		Str("dd.version", "1.0.0").
+		Uint("ID", jokes.ID).
+		Str("DAY", jokes.DAY).
+		Str("JOKE", jokes.JOKE).
+		Msg("unable to connect to database")
 	return jokes.JOKE, nil
 
 }
