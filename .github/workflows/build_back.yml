@@ -26,7 +26,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./jokeback
-          file: ./Dockerfile
           push: true
           tags: saphoooo/jokeback
 
