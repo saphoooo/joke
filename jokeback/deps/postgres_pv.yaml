@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: data-postgresql-postgresql-0
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 8Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/data/data-postgresql-postgresql-0"
+  claimRef:
+    name: data-postgresql-postgresql-0
+    namespace: default
