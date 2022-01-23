@@ -1,7 +1,7 @@
 CREATE TABLE JOKES(
-   ID INT PRIMARY KEY      NOT NULL,
-   DAY           CHAR(10) NOT NULL,
-   JOKE         TEXT      NOT NULL
+   ID    INT      PRIMARY KEY    NOT NULL,
+   DAY   CHAR(10) NOT NULL,
+   JOKE  TEXT     NOT NULL
 );
 INSERT INTO JOKES (ID, DAY, JOKE) VALUES (1, 'Sunday', 'What do you call a boomerang that won''t cone back? - A stick.');
 INSERT INTO JOKES (ID, DAY, JOKE) VALUES (2, 'Monday', 'What does a cloud wear under his raincoat? -Thunderwear.');
