@@ -26,7 +26,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./jokefront
-          file: ./Dockerfile
           push: true
           tags: saphoooo/jokefront
 
